@@ -43,11 +43,19 @@ module_configuration = [
         "type": "bool"
     },
     {
-        "param_name": "vt_assign_ip_asn",
+        "param_name": "vt_ip_assign_asn_as_tag",
         "param_human_name": "Assign ASN tag to IP",
         "param_description": "Assign a new tag to IOC IPs with the ASN fetched from VT",
         "default": True,
-        "mandatory": False,
+        "mandatory": True,
+        "type": "bool"
+    },
+    {
+        "param_name": "vt_domain_add_whois_as_desc",
+        "param_human_name": "Add domain whois information",
+        "param_description": "Add whois information int the description of IOCs of type domain",
+        "default": True,
+        "mandatory": True,
         "type": "bool"
     }
 ]

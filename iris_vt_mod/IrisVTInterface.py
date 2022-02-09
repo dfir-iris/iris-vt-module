@@ -138,9 +138,31 @@ class IrisVTInterface(IrisModuleInterface):
 
         return InterfaceStatus.I2Success
 
+    def _handle_vt_domain(self, ioc):
+        """
+        Handles an IOC of type domain and adds VT insights
+
+        :param ioc: IOC instance
+        :return: IIStatus
+        """
+        vt = self.get_vt_instance()
+
+        log.info(f'Getting domain report for {ioc.ioc_value}')
+        report = vt.get_domain_report(ioc.ioc_value)
+
+        log.info(f'VT report fetched.')
+        results = report.get('results')
+
+        if results.get('response_code') == 0:
+            log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
+            return InterfaceStatus.I2Success
+
+        if self._dict_conf.get('vt_domain_add_whois_as_desc') is True:
+            ioc.ioc_description = f"{ioc.ioc_description}\n\nWHOIS : {report.get('results').get('whois')}"
+
     def _handle_vt_ip(self, ioc):
         """
-        Handles an IOC of type IP
+        Handles an IOC of type IP and adds VT insights
 
         :param ioc: IOC instance
         :return: IIStatus
@@ -158,7 +180,7 @@ class IrisVTInterface(IrisModuleInterface):
             log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
             return InterfaceStatus.I2Success
 
-        if self._dict_conf.get('vt_assign_ip_asn') is True:
+        if self._dict_conf.get('vt_ip_assign_asn_as_tag') is True:
             log.info('Assigning new ASN tag to IOC.')
 
             asn = report.get('results').get('asn')
