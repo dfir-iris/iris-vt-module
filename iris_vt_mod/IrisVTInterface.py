@@ -64,6 +64,14 @@ class IrisVTInterface(IrisModuleInterface):
         else:
             log.info("Successfully registered on_postload_ioc_update hook")
 
+        self.register_to_hook(module_id, iris_hook_name='on_preload_ioc_update')
+        if status.is_failure():
+            log.error(status.get_message())
+            log.error(status.get_data())
+
+        else:
+            log.info("Successfully registered on_preload_ioc_update hook")
+
     def hooks_handler(self, hook_name: str, data):
         """
         Hooks handler table. Calls corresponding methods depending on the hooks name.
@@ -81,16 +89,20 @@ class IrisVTInterface(IrisModuleInterface):
         elif hook_name == "on_postload_ioc_update":
             status = self._handle_ioc(data=data)
 
+        elif hook_name == "on_preload_ioc_update":
+            data['ioc_value'] = "changed"
+            status = InterfaceStatus.I2Success
+
         else:
             log.critical(f'Received unsupported hook {hook_name}')
-            return InterfaceStatus.I2Error(logs=list(self.message_queue))
+            return InterfaceStatus.I2Error(data=data, logs=list(self.message_queue))
 
         if status.is_failure():
             log.error(f"Encountered error processing hook {hook_name}")
-            return InterfaceStatus.I2Error(logs=list(self.message_queue))
+            return InterfaceStatus.I2Error(data=data, logs=list(self.message_queue))
 
         log.info(f"Successfully processed hook {hook_name}")
-        return InterfaceStatus.I2Success(logs=list(self.message_queue))
+        return InterfaceStatus.I2Success(data=data, logs=list(self.message_queue))
 
     def get_vt_instance(self):
         """
@@ -116,27 +128,16 @@ class IrisVTInterface(IrisModuleInterface):
         :param data: Data associated to the hook, here IOC object
         :return: IIStatus
         """
-        vt = self.get_vt_instance()
 
-        # Check that the IOC we receive is of type the module can handle
-
+        # Check that the IOC we receive is of type the module can handle and dispatch
         if 'ip-' in data.ioc_type.type_name:
             return self._handle_vt_ip(ioc=data)
 
         elif 'domain' in data.ioc_type.type_name:
-            log.info(f'Getting domain report for {data.ioc_value}')
-            report = vt.get_domain_report(data.ioc_value)
-            results = report.get('results')
+            return self._handle_vt_domain(ioc=data)
 
-            if results.get('response_code') == 0:
-                log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
-                return InterfaceStatus.I2Success
-
-        else:
-            log.error(f'IOC type {data.ioc_type.type_name} not handled by VT module. Skipping')
-            return InterfaceStatus.I2Success
-
-        return InterfaceStatus.I2Success
+        log.error(f'IOC type {data.ioc_type.type_name} not handled by VT module. Skipping')
+        return InterfaceStatus.I2Success(data=data)
 
     def _handle_vt_domain(self, ioc):
         """
@@ -158,7 +159,9 @@ class IrisVTInterface(IrisModuleInterface):
             return InterfaceStatus.I2Success
 
         if self._dict_conf.get('vt_domain_add_whois_as_desc') is True:
-            ioc.ioc_description = f"{ioc.ioc_description}\n\nWHOIS : {report.get('results').get('whois')}"
+            ioc.ioc_description = f"{ioc.ioc_description}\n\nWHOIS\n {report.get('results').get('whois')}"
+
+        return InterfaceStatus.I2Success
 
     def _handle_vt_ip(self, ioc):
         """
