@@ -78,14 +78,19 @@ class IrisVTInterface(IrisModuleInterface):
         if hook_name == 'on_postload_ioc_create':
             status = self._handle_ioc(data=data)
 
-        else:
+        elif hook_name == "on_postload_ioc_update":
             status = self._handle_ioc(data=data)
 
-        if status.is_failure():
-            return InterfaceStatus.I2Error(f"Encountered error processing hook {hook_name}",
-                                           logs=list(self.message_queue))
+        else:
+            log.critical(f'Received unsupported hook {hook_name}')
+            return InterfaceStatus.I2Error(logs=list(self.message_queue))
 
-        return InterfaceStatus.I2Success(f"Successfully processed hook {hook_name}", logs=list(self.message_queue))
+        if status.is_failure():
+            log.error(f"Encountered error processing hook {hook_name}")
+            return InterfaceStatus.I2Error(logs=list(self.message_queue))
+
+        log.info(f"Successfully processed hook {hook_name}")
+        return InterfaceStatus.I2Success(logs=list(self.message_queue))
 
     def get_vt_instance(self):
         """
@@ -129,14 +134,12 @@ class IrisVTInterface(IrisModuleInterface):
             results = report.get('results')
 
             if results.get('response_code') == 0:
-                msg = f'Got invalid feedback from VT :: {results.get("verbose_msg")}'
-                log.error(msg)
-                return InterfaceStatus.I2Success(msg)
+                log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
+                return InterfaceStatus.I2Success()
 
         else:
-            msg = f'IOC type {data.ioc_type.type_name} not handled by VT module. Skipping'
-            log.error(msg)
-            return InterfaceStatus.I2Success(msg)
+            log.error(f'IOC type {data.ioc_type.type_name} not handled by VT module. Skipping')
+            return InterfaceStatus.I2Success()
 
         return InterfaceStatus.I2Success()
 
