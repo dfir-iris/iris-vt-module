@@ -113,10 +113,13 @@ class IrisVTInterface(IrisModuleInterface):
         :return: IIStatus
         """
         vt = self.get_vt_instance()
-        # Check that the IOC we receive is one we handle
+
+        # Check that the IOC we receive is of type the module can handle
+
         if 'ip-' in data.ioc_type.type_name:
             log.info(f'Getting IP report for {data.ioc_value}')
             report = vt.get_ip_report(data.ioc_value)
+
             log.info(f'Report fetched. Assigning new ASN tag to IOC.')
             data.ioc_tags = f"{data.ioc_tags},ASN:{report.get('results').get('asn')}"
 
@@ -126,11 +129,14 @@ class IrisVTInterface(IrisModuleInterface):
             results = report.get('results')
 
             if results.get('response_code') == 0:
-                log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
-                return InterfaceStatus.I2Success(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
+                msg = f'Got invalid feedback from VT :: {results.get("verbose_msg")}'
+                log.error(msg)
+                return InterfaceStatus.I2Success(msg)
 
         else:
-            return InterfaceStatus.I2Success(f'IOC type {data.ioc_type.type_name} not handled by VT module. Skipping')
+            msg = f'IOC type {data.ioc_type.type_name} not handled by VT module. Skipping'
+            log.error(msg)
+            return InterfaceStatus.I2Success(msg)
 
         return InterfaceStatus.I2Success()
 
