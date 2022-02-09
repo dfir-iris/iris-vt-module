@@ -81,9 +81,18 @@ class IrisVTInterface(IrisModuleInterface):
         else:
             status = self._handle_ioc(data=data)
 
+        if status.is_failure():
+            return InterfaceStatus.I2Error(f"Encountered error processing hook {hook_name}",
+                                           logs=list(self.message_queue))
+
         return InterfaceStatus.I2Success(f"Successfully processed hook {hook_name}", logs=list(self.message_queue))
 
     def get_vt_instance(self):
+        """
+        Returns an VT API instance depending if the key is premium or not
+
+        :return: VT Instance
+        """
         conf = self.get_configuration_dict().get_data()
         is_premium = conf.get('vt_key_is_premium')
         api_key = conf.get('vt_api_key')
@@ -94,6 +103,15 @@ class IrisVTInterface(IrisModuleInterface):
             return PublicApi(api_key)
 
     def _handle_ioc(self, data) -> InterfaceStatus.IIStatus:
+        """
+        Handle the IOC data the module just received. The module registered
+        to on_postload hooks, so it receives instances of IOC object.
+        These objects are attached to a dedicated SQlAlchemy session so data can
+        be modified safely.
+
+        :param data: Data associated to the hook, here IOC object
+        :return: IIStatus
+        """
         vt = self.get_vt_instance()
         # Check that the IOC we receive is one we handle
         if 'ip-' in data.ioc_type.type_name:
@@ -109,11 +127,10 @@ class IrisVTInterface(IrisModuleInterface):
 
             if results.get('response_code') == 0:
                 log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
+                return InterfaceStatus.I2Success(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
 
         else:
-            return data
+            return InterfaceStatus.I2Success(f'IOC type {data.ioc_type.type_name} not handled by VT module. Skipping')
 
-
-
-        return data
+        return InterfaceStatus.I2Success()
 
