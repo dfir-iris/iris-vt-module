@@ -43,11 +43,11 @@ module_configuration = [
         "type": "bool"
     },
     {
-        "param_name": "vt_max_rate",
-        "param_human_name": "VT Max Query Rate per min",
-        "param_description": "Set the maximum requests per minute to VT",
-        "default": None,
+        "param_name": "vt_assign_ip_asn",
+        "param_human_name": "Assign ASN tag to IP",
+        "param_description": "Assign a new tag to IOC IPs with the ASN fetched from VT",
+        "default": True,
         "mandatory": False,
-        "type": "int"
+        "type": "bool"
     }
 ]

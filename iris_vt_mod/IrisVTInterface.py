@@ -98,9 +98,8 @@ class IrisVTInterface(IrisModuleInterface):
 
         :return: VT Instance
         """
-        conf = self.get_configuration_dict().get_data()
-        is_premium = conf.get('vt_key_is_premium')
-        api_key = conf.get('vt_api_key')
+        is_premium = self._dict_conf .get('vt_key_is_premium')
+        api_key = self._dict_conf .get('vt_api_key')
 
         if is_premium:
             return PrivateApi(api_key)
@@ -122,11 +121,7 @@ class IrisVTInterface(IrisModuleInterface):
         # Check that the IOC we receive is of type the module can handle
 
         if 'ip-' in data.ioc_type.type_name:
-            log.info(f'Getting IP report for {data.ioc_value}')
-            report = vt.get_ip_report(data.ioc_value)
-
-            log.info(f'Report fetched. Assigning new ASN tag to IOC.')
-            data.ioc_tags = f"{data.ioc_tags},ASN:{report.get('results').get('asn')}"
+            return self._handle_vt_ip(ioc=data)
 
         elif 'domain' in data.ioc_type.type_name:
             log.info(f'Getting domain report for {data.ioc_value}')
@@ -135,11 +130,41 @@ class IrisVTInterface(IrisModuleInterface):
 
             if results.get('response_code') == 0:
                 log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
-                return InterfaceStatus.I2Success()
+                return InterfaceStatus.I2Success
 
         else:
             log.error(f'IOC type {data.ioc_type.type_name} not handled by VT module. Skipping')
-            return InterfaceStatus.I2Success()
+            return InterfaceStatus.I2Success
 
-        return InterfaceStatus.I2Success()
+        return InterfaceStatus.I2Success
 
+    def _handle_vt_ip(self, ioc):
+        """
+        Handles an IOC of type IP
+
+        :param ioc: IOC instance
+        :return: IIStatus
+        """
+        vt = self.get_vt_instance()
+
+        log.info(f'Getting IP report for {ioc.ioc_value}')
+        report = vt.get_ip_report(ioc.ioc_value)
+
+        log.info(f'VT report fetched.')
+
+        results = report.get('results')
+
+        if results.get('response_code') == 0:
+            log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
+            return InterfaceStatus.I2Success
+
+        if self._dict_conf.get('vt_assign_ip_asn') is True:
+            log.info('Assigning new ASN tag to IOC.')
+
+            asn = report.get('results').get('asn')
+            if asn is None:
+                log.info('ASN was nul - skipping')
+
+            ioc.ioc_tags = f"{ioc.ioc_tags},ASN:{report.get('results').get('asn')}"
+
+        return InterfaceStatus.I2Success
