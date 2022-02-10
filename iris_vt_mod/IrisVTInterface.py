@@ -22,6 +22,8 @@ from virus_total_apis import PublicApi, PrivateApi
 from iris_interface.IrisModuleInterface import IrisPipelineTypes, IrisModuleInterface, IrisModuleTypes
 import iris_interface.IrisInterfaceStatus as InterfaceStatus
 
+from vt_handler.vt_handler import VtHandler
+
 import iris_vt_mod.IrisVTConfig as interface_conf
 
 log = logging.getLogger(__name__)
@@ -72,16 +74,6 @@ class IrisVTInterface(IrisModuleInterface):
         else:
             log.info("Successfully registered on_preload_ioc_update hook")
 
-        self.register_to_hook(module_id, iris_hook_name='on_manual_trigger_ioc',
-                              manual_hook_name="Process with VT module", is_manual_hook=True)
-
-        if status.is_failure():
-            log.error(status.get_message())
-            log.error(status.get_data())
-
-        else:
-            log.info("Successfully registered on_manual_trigger_ioc hook")
-
     def hooks_handler(self, hook_name: str, data):
         """
         Hooks handler table. Calls corresponding methods depending on the hooks name.
@@ -99,10 +91,6 @@ class IrisVTInterface(IrisModuleInterface):
         elif hook_name == "on_postload_ioc_update":
             status = self._handle_ioc(data=data)
 
-        elif hook_name == "on_preload_ioc_update":
-            data['ioc_value'] = "changed"
-            status = InterfaceStatus.I2Success
-
         elif hook_name == "on_manual_trigger_ioc":
             status = self._handle_ioc(data=data)
 
@@ -117,20 +105,6 @@ class IrisVTInterface(IrisModuleInterface):
         log.info(f"Successfully processed hook {hook_name}")
         return InterfaceStatus.I2Success(data=data, logs=list(self.message_queue))
 
-    def get_vt_instance(self):
-        """
-        Returns an VT API instance depending if the key is premium or not
-
-        :return: VT Instance
-        """
-        is_premium = self._dict_conf .get('vt_key_is_premium')
-        api_key = self._dict_conf .get('vt_api_key')
-
-        if is_premium:
-            return PrivateApi(api_key)
-        else:
-            return PublicApi(api_key)
-
     def _handle_ioc(self, data) -> InterfaceStatus.IIStatus:
         """
         Handle the IOC data the module just received. The module registered
@@ -141,68 +115,14 @@ class IrisVTInterface(IrisModuleInterface):
         :param data: Data associated to the hook, here IOC object
         :return: IIStatus
         """
-
+        vt_handler = VtHandler(mod_config=self._dict_conf)
         # Check that the IOC we receive is of type the module can handle and dispatch
         if 'ip-' in data.ioc_type.type_name:
-            return self._handle_vt_ip(ioc=data)
+            return vt_handler.handle_vt_ip(ioc=data)
 
         elif 'domain' in data.ioc_type.type_name:
-            return self._handle_vt_domain(ioc=data)
+            return vt_handler.handle_vt_domain(ioc=data)
 
         log.error(f'IOC type {data.ioc_type.type_name} not handled by VT module. Skipping')
         return InterfaceStatus.I2Success(data=data)
 
-    def _handle_vt_domain(self, ioc):
-        """
-        Handles an IOC of type domain and adds VT insights
-
-        :param ioc: IOC instance
-        :return: IIStatus
-        """
-        vt = self.get_vt_instance()
-
-        log.info(f'Getting domain report for {ioc.ioc_value}')
-        report = vt.get_domain_report(ioc.ioc_value)
-
-        log.info(f'VT report fetched.')
-        results = report.get('results')
-
-        if results.get('response_code') == 0:
-            log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
-            return InterfaceStatus.I2Success
-
-        if self._dict_conf.get('vt_domain_add_whois_as_desc') is True:
-            ioc.ioc_description = f"{ioc.ioc_description}\n\nWHOIS\n {report.get('results').get('whois')}"
-
-        return InterfaceStatus.I2Success
-
-    def _handle_vt_ip(self, ioc):
-        """
-        Handles an IOC of type IP and adds VT insights
-
-        :param ioc: IOC instance
-        :return: IIStatus
-        """
-        vt = self.get_vt_instance()
-
-        log.info(f'Getting IP report for {ioc.ioc_value}')
-        report = vt.get_ip_report(ioc.ioc_value)
-
-        log.info(f'VT report fetched.')
-
-        results = report.get('results')
-
-        if results.get('response_code') == 0:
-            log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
-            return InterfaceStatus.I2Success
-
-        if self._dict_conf.get('vt_ip_assign_asn_as_tag') is True:
-            log.info('Assigning new ASN tag to IOC.')
-
-            asn = report.get('results').get('asn')
-            if asn is None:
-                log.info('ASN was nul - skipping')
-
-            ioc.ioc_tags = f"{ioc.ioc_tags},ASN:{report.get('results').get('asn')}"
-
-        return InterfaceStatus.I2Success
