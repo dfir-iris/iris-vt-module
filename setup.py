@@ -23,9 +23,9 @@ import setuptools
 
 
 setuptools.setup(
-     name='iris_vt_mod',
+     name='iris_vt_module',
      version='0.1',
-     packages=['iris_vt_mod'],
+     packages=['iris_vt_module', 'iris_vt_module.vt_handler'],
      author="DFIR-IRIS",
      author_email="contact@dfir-iris.org",
      description="An interface module for VT and Iris",

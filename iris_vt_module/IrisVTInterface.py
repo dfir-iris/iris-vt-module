@@ -22,11 +22,11 @@ from virus_total_apis import PublicApi, PrivateApi
 from iris_interface.IrisModuleInterface import IrisPipelineTypes, IrisModuleInterface, IrisModuleTypes
 import iris_interface.IrisInterfaceStatus as InterfaceStatus
 
-from vt_handler.vt_handler import VtHandler
+from iris_vt_module.vt_handler.vt_handler import VtHandler
 
-import iris_vt_mod.IrisVTConfig as interface_conf
+import iris_vt_module.IrisVTConfig as interface_conf
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('iris_vt_module')
 
 
 class IrisVTInterface(IrisModuleInterface):

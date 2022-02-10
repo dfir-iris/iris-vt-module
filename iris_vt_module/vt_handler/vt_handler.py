@@ -22,7 +22,7 @@ from virus_total_apis import PublicApi, PrivateApi
 from iris_interface.IrisModuleInterface import IrisPipelineTypes, IrisModuleInterface, IrisModuleTypes
 import iris_interface.IrisInterfaceStatus as InterfaceStatus
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('iris_vt_module.vt_handler')
 
 
 class VtHandler():
@@ -57,13 +57,36 @@ class VtHandler():
 
         log.info(f'VT report fetched.')
         results = report.get('results')
+        if not results:
+            log.error(f'Unable to get report. Is the API key valid ?')
+            return InterfaceStatus.I2Error
 
         if results.get('response_code') == 0:
             log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
             return InterfaceStatus.I2Success()
 
         if self.mod_config.get('vt_domain_add_whois_as_desc') is True:
-            ioc.ioc_description = f"{ioc.ioc_description}\n\nWHOIS\n {report.get('results').get('whois')}"
+            if "WHOIS" not in ioc.ioc_description:
+                log.info('Adding WHOIS information to IOC description')
+                ioc.ioc_description = f"{ioc.ioc_description}\n\nWHOIS\n {report.get('results').get('whois')}"
+
+            else:
+                log.info('Skipped adding WHOIS. Information already present')
+        else:
+            log.info('Skipped adding WHOIS. Option disabled')
+
+        print(self.mod_config.get('vt_domain_add_subdomain_as_desc'))
+        if self.mod_config.get('vt_domain_add_subdomain_as_desc') is True:
+
+            if "Subdomains" not in ioc.ioc_description:
+                subd_data = [f"- {subd}\n" for subd in report.get('results').get('subdomains')]
+                log.info('Adding subdomains information to IOC description')
+                ioc.ioc_description = f"{ioc.ioc_description}\n\nSubdomains\n{subd_data}"
+
+            else:
+                log.info('Skipped adding subdomains information. Information already present')
+        else:
+            log.info('Skipped adding subdomains information. Option disabled')
 
         return InterfaceStatus.I2Success()
 
@@ -91,6 +114,7 @@ class VtHandler():
             return InterfaceStatus.I2Success
 
         log.info(f'Report results validated')
+
         if self.mod_config.get('vt_ip_assign_asn_as_tag') is True:
             log.info('Assigning new ASN tag to IOC.')
 
@@ -98,6 +122,9 @@ class VtHandler():
             if asn is None:
                 log.info('ASN was nul - skipping')
 
-            ioc.ioc_tags = f"{ioc.ioc_tags},ASN:{report.get('results').get('asn')}"
+            if f'ASN:{asn}' not in ioc.ioc_tags.split(','):
+                ioc.ioc_tags = f"{ioc.ioc_tags},ASN:{asn}"
+            else:
+                log.info('ASN already tagged for this IOC. Skipping')
 
         return InterfaceStatus.I2Success("Successfully processed IP")

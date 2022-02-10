@@ -53,8 +53,16 @@ module_configuration = [
     {
         "param_name": "vt_domain_add_whois_as_desc",
         "param_human_name": "Add domain whois information",
-        "param_description": "Add whois information int the description of IOCs of type domain",
+        "param_description": "Add whois information into the description of IOCs of type domain",
         "default": True,
+        "mandatory": True,
+        "type": "bool"
+    },
+    {
+        "param_name": "vt_domain_add_subdomain_as_desc",
+        "param_human_name": "Add subdomains in IOC description",
+        "param_description": "Add subdomains information into the description of IOCs of type domain",
+        "default": False,
         "mandatory": True,
         "type": "bool"
     }
