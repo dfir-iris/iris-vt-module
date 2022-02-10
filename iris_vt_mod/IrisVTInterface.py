@@ -72,6 +72,16 @@ class IrisVTInterface(IrisModuleInterface):
         else:
             log.info("Successfully registered on_preload_ioc_update hook")
 
+        self.register_to_hook(module_id, iris_hook_name='on_manual_trigger_ioc',
+                              manual_hook_name="Process with VT module", is_manual_hook=True)
+
+        if status.is_failure():
+            log.error(status.get_message())
+            log.error(status.get_data())
+
+        else:
+            log.info("Successfully registered on_manual_trigger_ioc hook")
+
     def hooks_handler(self, hook_name: str, data):
         """
         Hooks handler table. Calls corresponding methods depending on the hooks name.
@@ -92,6 +102,9 @@ class IrisVTInterface(IrisModuleInterface):
         elif hook_name == "on_preload_ioc_update":
             data['ioc_value'] = "changed"
             status = InterfaceStatus.I2Success
+
+        elif hook_name == "on_manual_trigger_ioc":
+            status = self._handle_ioc(data=data)
 
         else:
             log.critical(f'Received unsupported hook {hook_name}')
