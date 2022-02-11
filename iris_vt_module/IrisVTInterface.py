@@ -66,13 +66,13 @@ class IrisVTInterface(IrisModuleInterface):
         else:
             log.info("Successfully registered on_postload_ioc_update hook")
 
-        self.register_to_hook(module_id, iris_hook_name='on_preload_ioc_update')
+        self.register_to_hook(module_id, iris_hook_name='on_manual_trigger_ioc', manual_hook_name='Get VT insight')
         if status.is_failure():
             log.error(status.get_message())
             log.error(status.get_data())
 
         else:
-            log.info("Successfully registered on_preload_ioc_update hook")
+            log.info("Successfully registered on_manual_trigger_ioc hook")
 
     def hooks_handler(self, hook_name: str, data):
         """
