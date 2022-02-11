@@ -75,7 +75,6 @@ class VtHandler():
         else:
             log.info('Skipped adding WHOIS. Option disabled')
 
-        print(self.mod_config.get('vt_domain_add_subdomain_as_desc'))
         if self.mod_config.get('vt_domain_add_subdomain_as_desc') is True:
 
             if "Subdomains" not in ioc.ioc_description:
