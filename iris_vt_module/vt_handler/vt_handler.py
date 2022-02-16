@@ -17,10 +17,14 @@
 #  along with this program; if not, write to the Free Software Foundation,
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import logging
+import traceback
+
 from virus_total_apis import PublicApi, PrivateApi
 
 from iris_interface.IrisModuleInterface import IrisPipelineTypes, IrisModuleInterface, IrisModuleTypes
 import iris_interface.IrisInterfaceStatus as InterfaceStatus
+from app.datamgmt.manage.manage_attribute_db import add_tab_attribute_field
+from jinja2 import Template
 
 log = logging.getLogger('iris_vt_module.vt_handler')
 
@@ -78,14 +82,33 @@ class VtHandler():
         if self.mod_config.get('vt_domain_add_subdomain_as_desc') is True:
 
             if "Subdomains" not in ioc.ioc_description:
-                subd_data = [f"- {subd}\n" for subd in report.get('results').get('subdomains')]
-                log.info('Adding subdomains information to IOC description')
-                ioc.ioc_description = f"{ioc.ioc_description}\n\nSubdomains\n{subd_data}"
-
+                if report.get('results').get('subdomains'):
+                    subd_data = [f"- {subd}\n" for subd in report.get('results').get('subdomains')]
+                    log.info('Adding subdomains information to IOC description')
+                    ioc.ioc_description = f"{ioc.ioc_description}\n\nSubdomains\n{subd_data}"
+                else:
+                    log.info('No subdomains in VT report')
             else:
                 log.info('Skipped adding subdomains information. Information already present')
         else:
-            log.info('Skipped adding subdomains information. Option disabled')
+            log.info('Skipped adding subdomain information. Option disabled')
+
+        if self.mod_config.get('vt_report_as_attribute') is True:
+            log.info('Adding new attribute VT Report to IOC')
+            html_template = self.mod_config.get('vt_report_template')
+            template = Template(html_template)
+            context = report.get('results')
+
+            try:
+                rendered = template.render(context)
+            except Exception:
+                log.error(traceback.format_exc())
+
+            try:
+                add_tab_attribute_field(ioc, tab_name='VT Report', field_name="HTML report", field_type="html",
+                                        field_value=rendered)
+            except Exception:
+                log.error(traceback.format_exc())
 
         return InterfaceStatus.I2Success()
 

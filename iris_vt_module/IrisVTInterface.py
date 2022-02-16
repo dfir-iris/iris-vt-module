@@ -84,7 +84,7 @@ class IrisVTInterface(IrisModuleInterface):
         """
         log.addHandler(self.set_log_handler())
 
-        log.info(f'Received {hook_name}')
+        log.info(f'Receive {hook_name}')
         if hook_name == 'on_postload_ioc_create':
             status = self._handle_ioc(data=data)
 
@@ -115,14 +115,16 @@ class IrisVTInterface(IrisModuleInterface):
         :param data: Data associated to the hook, here IOC object
         :return: IIStatus
         """
+
         vt_handler = VtHandler(mod_config=self._dict_conf)
-        # Check that the IOC we receive is of type the module can handle and dispatch
-        if 'ip-' in data.ioc_type.type_name:
-            return vt_handler.handle_vt_ip(ioc=data)
+        for element in data:
+            # Check that the IOC we receive is of type the module can handle and dispatch
+            if 'ip-' in element.ioc_type.type_name:
+                return vt_handler.handle_vt_ip(ioc=element)
 
-        elif 'domain' in data.ioc_type.type_name:
-            return vt_handler.handle_vt_domain(ioc=data)
+            elif 'domain' in element.ioc_type.type_name:
+                return vt_handler.handle_vt_domain(ioc=element)
 
-        log.error(f'IOC type {data.ioc_type.type_name} not handled by VT module. Skipping')
-        return InterfaceStatus.I2Success(data=data)
+            log.error(f'IOC type {element.ioc_type.type_name} not handled by VT module. Skipping')
+            return InterfaceStatus.I2Success(data=element)
 

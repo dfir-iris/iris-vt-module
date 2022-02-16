@@ -65,5 +65,21 @@ module_configuration = [
         "default": False,
         "mandatory": True,
         "type": "bool"
+    },
+    {
+        "param_name": "vt_report_as_attribute",
+        "param_human_name": "Add VT report as new IOC attribute",
+        "param_description": "Creates a new attribute on the IOC, base on the VT report",
+        "default": False,
+        "mandatory": True,
+        "type": "bool"
+    },
+    {
+        "param_name": "vt_report_template",
+        "param_human_name": "Attribute VT report template",
+        "param_description": "Reports template used to add a new attribute",
+        "default": "",
+        "mandatory": False,
+        "type": "textfield_html"
     }
 ]
