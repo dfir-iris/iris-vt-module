@@ -93,9 +93,9 @@ class VtHandler():
         else:
             log.info('Skipped adding subdomain information. Option disabled')
 
-        if self.mod_config.get('vt_report_as_attribute') is True:
+        if self.mod_config.get('vt_domain_report_as_attribute') is True:
             log.info('Adding new attribute VT Report to IOC')
-            html_template = self.mod_config.get('vt_report_template')
+            html_template = self.mod_config.get('vt_domain_report_template')
             template = Template(html_template)
             context = report.get('results')
 
@@ -103,12 +103,14 @@ class VtHandler():
                 rendered = template.render(context)
             except Exception:
                 log.error(traceback.format_exc())
+                return InterfaceStatus.I2Error(traceback.format_exc())
 
             try:
                 add_tab_attribute_field(ioc, tab_name='VT Report', field_name="HTML report", field_type="html",
                                         field_value=rendered)
             except Exception:
                 log.error(traceback.format_exc())
+                return InterfaceStatus.I2Error(traceback.format_exc())
 
         return InterfaceStatus.I2Success()
 
