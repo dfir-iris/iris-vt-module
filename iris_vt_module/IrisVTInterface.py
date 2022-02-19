@@ -50,29 +50,41 @@ class IrisVTInterface(IrisModuleInterface):
         :param module_id: Module ID provided by IRIS
         :return: Nothing
         """
-        status = self.register_to_hook(module_id, iris_hook_name='on_postload_ioc_create')
-        if status.is_failure():
-            log.error(status.get_message())
-            log.error(status.get_data())
+        self.module_id = module_id
 
+        if self._dict_conf.get('vt_on_create_hook_enabled'):
+            status = self.register_to_hook(module_id, iris_hook_name='on_postload_ioc_create')
+            if status.is_failure():
+                log.error(status.get_message())
+                log.error(status.get_data())
+
+            else:
+                log.info("Successfully registered on_postload_ioc_create hook")
         else:
-            log.info("Successfully registered on_postload_ioc_create hook")
+            self.deregister_from_hook(module_id=self.module_id, iris_hook_name='on_postload_ioc_create')
 
-        self.register_to_hook(module_id, iris_hook_name='on_postload_ioc_update')
-        if status.is_failure():
-            log.error(status.get_message())
-            log.error(status.get_data())
+        if self._dict_conf.get('vt_on_update_hook_enabled'):
+            status = self.register_to_hook(module_id, iris_hook_name='on_postload_ioc_update')
+            if status.is_failure():
+                log.error(status.get_message())
+                log.error(status.get_data())
 
+            else:
+                log.info("Successfully registered on_postload_ioc_update hook")
         else:
-            log.info("Successfully registered on_postload_ioc_update hook")
+            self.deregister_from_hook(module_id=self.module_id, iris_hook_name='on_postload_ioc_update')
 
-        self.register_to_hook(module_id, iris_hook_name='on_manual_trigger_ioc', manual_hook_name='Get VT insight')
-        if status.is_failure():
-            log.error(status.get_message())
-            log.error(status.get_data())
+        if self._dict_conf.get('vt_manual_hook_enabled'):
+            status = self.register_to_hook(module_id, iris_hook_name='on_manual_trigger_ioc',
+                                           manual_hook_name='Get VT insight')
+            if status.is_failure():
+                log.error(status.get_message())
+                log.error(status.get_data())
 
+            else:
+                log.info("Successfully registered on_manual_trigger_ioc hook")
         else:
-            log.info("Successfully registered on_manual_trigger_ioc hook")
+            self.deregister_from_hook(module_id=self.module_id, iris_hook_name='on_manual_trigger_ioc')
 
     def hooks_handler(self, hook_name: str, data):
         """
