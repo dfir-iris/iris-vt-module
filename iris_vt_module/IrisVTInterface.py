@@ -16,17 +16,12 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with this program; if not, write to the Free Software Foundation,
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-import logging
-from virus_total_apis import PublicApi, PrivateApi
 
-from iris_interface.IrisModuleInterface import IrisPipelineTypes, IrisModuleInterface, IrisModuleTypes
 import iris_interface.IrisInterfaceStatus as InterfaceStatus
-
-from iris_vt_module.vt_handler.vt_handler import VtHandler
+from iris_interface.IrisModuleInterface import IrisModuleInterface, IrisModuleTypes, log
 
 import iris_vt_module.IrisVTConfig as interface_conf
-
-log = logging.getLogger('iris_vt_module')
+from iris_vt_module.vt_handler.vt_handler import VtHandler
 
 
 class IrisVTInterface(IrisModuleInterface):
@@ -94,16 +89,10 @@ class IrisVTInterface(IrisModuleInterface):
         :param data: Data associated with the trigger.
         :return: Data
         """
-        log.addHandler(self.set_log_handler())
+        self.set_log_handler(log)
 
-        log.info(f'Receive {hook_name}')
-        if hook_name == 'on_postload_ioc_create':
-            status = self._handle_ioc(data=data)
-
-        elif hook_name == "on_postload_ioc_update":
-            status = self._handle_ioc(data=data)
-
-        elif hook_name == "on_manual_trigger_ioc":
+        log.info(f'Received {hook_name}')
+        if hook_name in ['on_postload_ioc_create', 'on_postload_ioc_update', 'on_manual_trigger_ioc']:
             status = self._handle_ioc(data=data)
 
         else:
@@ -129,14 +118,19 @@ class IrisVTInterface(IrisModuleInterface):
         """
 
         vt_handler = VtHandler(mod_config=self._dict_conf)
+        in_status = InterfaceStatus.I2Success()
+
         for element in data:
             # Check that the IOC we receive is of type the module can handle and dispatch
             if 'ip-' in element.ioc_type.type_name:
-                return vt_handler.handle_vt_ip(ioc=element)
+                status = vt_handler.handle_vt_ip(ioc=element)
+                in_status = InterfaceStatus.merge_status(in_status, status)
 
             elif 'domain' in element.ioc_type.type_name:
-                return vt_handler.handle_vt_domain(ioc=element)
+                status = vt_handler.handle_vt_domain(ioc=element)
+                in_status = InterfaceStatus.merge_status(in_status, status)
 
-            log.error(f'IOC type {element.ioc_type.type_name} not handled by VT module. Skipping')
-            return InterfaceStatus.I2Success(data=element)
+            else:
+                log.error(f'IOC type {element.ioc_type.type_name} not handled by VT module. Skipping')
 
+        return in_status(data=data)

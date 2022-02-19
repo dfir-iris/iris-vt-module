@@ -21,12 +21,11 @@ import traceback
 
 from virus_total_apis import PublicApi, PrivateApi
 
-from iris_interface.IrisModuleInterface import IrisPipelineTypes, IrisModuleInterface, IrisModuleTypes
+from iris_interface.IrisModuleInterface import IrisPipelineTypes, IrisModuleInterface, IrisModuleTypes, log
 import iris_interface.IrisInterfaceStatus as InterfaceStatus
 from app.datamgmt.manage.manage_attribute_db import add_tab_attribute_field
-from jinja2 import Template
 
-log = logging.getLogger('iris_vt_module.vt_handler')
+from iris_vt_module.vt_handler.vt_helper import gen_domain_report_from_template
 
 
 class VtHandler():
@@ -93,24 +92,27 @@ class VtHandler():
         else:
             log.info('Skipped adding subdomain information. Option disabled')
 
-        if self.mod_config.get('vt_domain_report_as_attribute') is True:
-            log.info('Adding new attribute VT Report to IOC')
-            html_template = self.mod_config.get('vt_domain_report_template')
-            template = Template(html_template)
-            context = report.get('results')
+        if self.mod_config.get('vt_report_as_attribute') is True:
+            log.info('Adding new attribute VT Domain Report to IOC')
 
-            try:
-                rendered = template.render(context)
-            except Exception:
-                log.error(traceback.format_exc())
-                return InterfaceStatus.I2Error(traceback.format_exc())
+            status = gen_domain_report_from_template(html_template=self.mod_config.get('vt_domain_report_template'),
+                                                     vt_report=report.get('results'))
+
+            if not status.is_success():
+                return status
+
+            rendered_report = status.get_data()
 
             try:
                 add_tab_attribute_field(ioc, tab_name='VT Report', field_name="HTML report", field_type="html",
-                                        field_value=rendered)
+                                        field_value=rendered_report)
+
             except Exception:
+
                 log.error(traceback.format_exc())
                 return InterfaceStatus.I2Error(traceback.format_exc())
+        else:
+            log.info('Skipped adding attribute report. Option disabled')
 
         return InterfaceStatus.I2Success()
 
