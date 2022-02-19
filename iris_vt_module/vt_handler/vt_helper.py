@@ -28,7 +28,7 @@ def gen_domain_report_from_template(html_template, vt_report) -> IrisInterfaceSt
             count_positives += detected_url.get('positives')
 
         if context['nb_detected_urls'] > 0:
-            context["avg_urls_detect_ratio"] = f"{count_positives/context['nb_detected_urls']} / " \
+            context["avg_urls_detect_ratio"] = f"{round(count_positives/context['nb_detected_urls'], 2)} / " \
                                               f"{count_total/context['nb_detected_urls']}"
         else:
             context["avg_urls_detect_ratio"] = "No information"
@@ -43,7 +43,7 @@ def gen_domain_report_from_template(html_template, vt_report) -> IrisInterfaceSt
             count_positives += samples.get('positives')
 
         if context['nb_detected_samples'] > 0:
-            context["avg_samples_detect_ratio"] = f"{count_positives/context['nb_detected_samples']} / " \
+            context["avg_samples_detect_ratio"] = f"{round(count_positives/context['nb_detected_samples'], 2)} / " \
                                                   f"{count_total/context['nb_detected_samples']}"
         else:
             context["avg_samples_detect_ratio"] = "No information"
