@@ -25,7 +25,7 @@ from iris_interface.IrisModuleInterface import IrisPipelineTypes, IrisModuleInte
 import iris_interface.IrisInterfaceStatus as InterfaceStatus
 from app.datamgmt.manage.manage_attribute_db import add_tab_attribute_field
 
-from iris_vt_module.vt_handler.vt_helper import gen_domain_report_from_template
+from iris_vt_module.vt_handler.vt_helper import gen_domain_report_from_template, gen_ip_report_from_template
 
 
 class VtHandler():
@@ -152,5 +152,27 @@ class VtHandler():
                 ioc.ioc_tags = f"{ioc.ioc_tags},ASN:{asn}"
             else:
                 log.info('ASN already tagged for this IOC. Skipping')
+
+        if self.mod_config.get('vt_report_as_attribute') is True:
+            log.info('Adding new attribute VT IP Report to IOC')
+
+            status = gen_ip_report_from_template(html_template=self.mod_config.get('vt_ip_report_template'),
+                                                 vt_report=report.get('results'))
+
+            if not status.is_success():
+                return status
+
+            rendered_report = status.get_data()
+
+            try:
+                add_tab_attribute_field(ioc, tab_name='VT Report', field_name="HTML report", field_type="html",
+                                        field_value=rendered_report)
+
+            except Exception:
+
+                log.error(traceback.format_exc())
+                return InterfaceStatus.I2Error(traceback.format_exc())
+        else:
+            log.info('Skipped adding attribute report. Option disabled')
 
         return InterfaceStatus.I2Success("Successfully processed IP")
