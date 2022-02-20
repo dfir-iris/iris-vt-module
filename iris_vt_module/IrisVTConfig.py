@@ -79,11 +79,30 @@ module_configuration = [
         "section": "Insights"
     },
     {
+        "param_name": "vt_tag_malicious_threshold",
+        "param_human_name": "IOC tag malicious threshold",
+        "param_description": "Tag the IOC has malicious if the percentage of detection is above the specified threshold",
+        "default": "10",
+        "mandatory": True,
+        "type": "float",
+        "section": "Insights"
+    },
+    {
+        "param_name": "vt_tag_suspicious_threshold",
+        "param_human_name": "IOC tag suspicious threshold",
+        "param_description": "Tag the IOC has suspicious if the percentage of detection is above the specified "
+                             "threshold",
+        "default": "5",
+        "mandatory": True,
+        "type": "float",
+        "section": "Insights"
+    },
+    {
         "param_name": "vt_report_as_attribute",
         "param_human_name": "Add VT report as new IOC attribute",
         "param_description": "Creates a new attribute on the IOC, base on the VT report. Attributes are based "
                              "on the templates of this configuration",
-        "default": False,
+        "default": True,
         "mandatory": True,
         "type": "bool",
         "section": "Insights"

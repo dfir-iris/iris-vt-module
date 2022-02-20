@@ -7,6 +7,28 @@ from iris_interface import IrisInterfaceStatus
 log = logging.getLogger('iris_vt_module.vt_helper')
 
 
+def get_detected_urls_ratio(report):
+    avg_urls_detect_ratio = None
+    avg_urls_detect_ratio_str = "No information"
+    nb_detected_urls = None
+    if "detected_urls" in report:
+        nb_detected_urls = len(report["detected_urls"])
+        count_total = 0
+        count_positives = 0
+
+        for detected_url in report["detected_urls"]:
+            count_total += detected_url.get('total')
+            count_positives += detected_url.get('positives')
+
+        if nb_detected_urls > 0:
+            avg_urls_detect_ratio_str = f"{round(count_positives/nb_detected_urls, 2)} / " \
+                                              f"{count_total/nb_detected_urls}"
+
+            avg_urls_detect_ratio = round(count_positives/count_total, 2)*100
+
+    return avg_urls_detect_ratio_str, avg_urls_detect_ratio, nb_detected_urls
+
+
 def gen_domain_report_from_template(html_template, vt_report) -> IrisInterfaceStatus:
     """
     Generates an HTML report for domains, displayed as an attribute in the IOC
@@ -18,20 +40,7 @@ def gen_domain_report_from_template(html_template, vt_report) -> IrisInterfaceSt
     template = Template(html_template)
     context = vt_report
 
-    if "detected_urls" in context:
-        context["nb_detected_urls"] = len(context["detected_urls"])
-        count_total = 0
-        count_positives = 0
-
-        for detected_url in context["detected_urls"]:
-            count_total += detected_url.get('total')
-            count_positives += detected_url.get('positives')
-
-        if context['nb_detected_urls'] > 0:
-            context["avg_urls_detect_ratio"] = f"{round(count_positives/context['nb_detected_urls'], 2)} / " \
-                                              f"{count_total/context['nb_detected_urls']}"
-        else:
-            context["avg_urls_detect_ratio"] = "No information"
+    context["avg_urls_detect_ratio"], _, context["nb_detected_urls"] = get_detected_urls_ratio(context)
 
     if "detected_downloaded_samples" in context:
         context["nb_detected_samples"] = len(context["detected_downloaded_samples"])
@@ -70,20 +79,7 @@ def gen_ip_report_from_template(html_template, vt_report) -> IrisInterfaceStatus
     template = Template(html_template)
     context = vt_report
 
-    if "detected_urls" in context:
-        context["nb_detected_urls"] = len(context["detected_urls"])
-        count_total = 0
-        count_positives = 0
-
-        for detected_url in context["detected_urls"]:
-            count_total += detected_url.get('total')
-            count_positives += detected_url.get('positives')
-
-        if context['nb_detected_urls'] > 0:
-            context["avg_urls_detect_ratio"] = f"{round(count_positives/context['nb_detected_urls'], 2)} / " \
-                                              f"{count_total/context['nb_detected_urls']}"
-        else:
-            context["avg_urls_detect_ratio"] = "No information"
+    context["avg_urls_detect_ratio"], _, context["nb_detected_urls"] = get_detected_urls_ratio(context)
 
     if "detected_communicating_samples" in context:
         context["nb_detected_samples"] = len(context["detected_communicating_samples"])

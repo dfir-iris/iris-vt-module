@@ -18,7 +18,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import iris_interface.IrisInterfaceStatus as InterfaceStatus
-from iris_interface.IrisModuleInterface import IrisModuleInterface, IrisModuleTypes, log
+from iris_interface.IrisModuleInterface import IrisModuleInterface, IrisModuleTypes
 
 import iris_vt_module.IrisVTConfig as interface_conf
 from iris_vt_module.vt_handler.vt_handler import VtHandler
@@ -50,22 +50,22 @@ class IrisVTInterface(IrisModuleInterface):
         if self._dict_conf.get('vt_on_create_hook_enabled'):
             status = self.register_to_hook(module_id, iris_hook_name='on_postload_ioc_create')
             if status.is_failure():
-                log.error(status.get_message())
-                log.error(status.get_data())
+                self.log.error(status.get_message())
+                self.log.error(status.get_data())
 
             else:
-                log.info("Successfully registered on_postload_ioc_create hook")
+                self.log.info("Successfully registered on_postload_ioc_create hook")
         else:
             self.deregister_from_hook(module_id=self.module_id, iris_hook_name='on_postload_ioc_create')
 
         if self._dict_conf.get('vt_on_update_hook_enabled'):
             status = self.register_to_hook(module_id, iris_hook_name='on_postload_ioc_update')
             if status.is_failure():
-                log.error(status.get_message())
-                log.error(status.get_data())
+                self.log.error(status.get_message())
+                self.log.error(status.get_data())
 
             else:
-                log.info("Successfully registered on_postload_ioc_update hook")
+                self.log.info("Successfully registered on_postload_ioc_update hook")
         else:
             self.deregister_from_hook(module_id=self.module_id, iris_hook_name='on_postload_ioc_update')
 
@@ -73,11 +73,11 @@ class IrisVTInterface(IrisModuleInterface):
             status = self.register_to_hook(module_id, iris_hook_name='on_manual_trigger_ioc',
                                            manual_hook_name='Get VT insight')
             if status.is_failure():
-                log.error(status.get_message())
-                log.error(status.get_data())
+                self.log.error(status.get_message())
+                self.log.error(status.get_data())
 
             else:
-                log.info("Successfully registered on_manual_trigger_ioc hook")
+                self.log.info("Successfully registered on_manual_trigger_ioc hook")
         else:
             self.deregister_from_hook(module_id=self.module_id, iris_hook_name='on_manual_trigger_ioc')
 
@@ -89,21 +89,20 @@ class IrisVTInterface(IrisModuleInterface):
         :param data: Data associated with the trigger.
         :return: Data
         """
-        self.set_log_handler(log)
 
-        log.info(f'Received {hook_name}')
+        self.log.info(f'Received {hook_name}')
         if hook_name in ['on_postload_ioc_create', 'on_postload_ioc_update', 'on_manual_trigger_ioc']:
             status = self._handle_ioc(data=data)
 
         else:
-            log.critical(f'Received unsupported hook {hook_name}')
+            self.log.critical(f'Received unsupported hook {hook_name}')
             return InterfaceStatus.I2Error(data=data, logs=list(self.message_queue))
 
         if status.is_failure():
-            log.error(f"Encountered error processing hook {hook_name}")
+            self.log.error(f"Encountered error processing hook {hook_name}")
             return InterfaceStatus.I2Error(data=data, logs=list(self.message_queue))
 
-        log.info(f"Successfully processed hook {hook_name}")
+        self.log.info(f"Successfully processed hook {hook_name}")
         return InterfaceStatus.I2Success(data=data, logs=list(self.message_queue))
 
     def _handle_ioc(self, data) -> InterfaceStatus.IIStatus:
@@ -117,8 +116,8 @@ class IrisVTInterface(IrisModuleInterface):
         :return: IIStatus
         """
 
-        vt_handler = VtHandler(mod_config=self._dict_conf)
-        in_status = InterfaceStatus.I2Success()
+        vt_handler = VtHandler(mod_config=self._dict_conf, logger=self.log)
+        in_status = InterfaceStatus.IIStatus(code=InterfaceStatus.I2CodeNoError)
 
         for element in data:
             # Check that the IOC we receive is of type the module can handle and dispatch
@@ -131,6 +130,6 @@ class IrisVTInterface(IrisModuleInterface):
                 in_status = InterfaceStatus.merge_status(in_status, status)
 
             else:
-                log.error(f'IOC type {element.ioc_type.type_name} not handled by VT module. Skipping')
+                self.log.error(f'IOC type {element.ioc_type.type_name} not handled by VT module. Skipping')
 
         return in_status(data=data)
