@@ -1,3 +1,4 @@
+import json
 import traceback
 
 from jinja2 import Template
@@ -78,15 +79,16 @@ def gen_ip_report_from_template(html_template, vt_report) -> IrisInterfaceStatus
     """
     template = Template(html_template)
     context = vt_report
+    results = context.get('results')
 
-    context["avg_urls_detect_ratio"], _, context["nb_detected_urls"] = get_detected_urls_ratio(context)
+    context["avg_urls_detect_ratio"], _, context["nb_detected_urls"] = get_detected_urls_ratio(results)
 
-    if "detected_communicating_samples" in context:
-        context["nb_detected_samples"] = len(context["detected_communicating_samples"])
+    if "detected_communicating_samples" in results:
+        context["nb_detected_samples"] = len(results["detected_communicating_samples"])
         count_total = 0
         count_positives = 0
 
-        for samples in context["detected_communicating_samples"]:
+        for samples in results["detected_communicating_samples"]:
             count_total += samples.get('total')
             count_positives += samples.get('positives')
 
@@ -101,6 +103,7 @@ def gen_ip_report_from_template(html_template, vt_report) -> IrisInterfaceStatus
         rendered = template.render(context)
 
     except Exception:
+        print(traceback.format_exc())
         log.error(traceback.format_exc())
         return IrisInterfaceStatus.I2Error(traceback.format_exc())
 

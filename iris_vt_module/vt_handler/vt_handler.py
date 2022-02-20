@@ -41,7 +41,6 @@ class VtHandler():
 
         :return: VT Instance
         """
-        print(type(self.mod_config))
         is_premium = self.mod_config.get('vt_key_is_premium')
         api_key = self.mod_config.get('vt_api_key')
 
@@ -61,7 +60,7 @@ class VtHandler():
             self.log.error(f'Got invalid feedback from VT :: {results.get("verbose_msg")}')
             return InterfaceStatus.I2Error()
 
-        return InterfaceStatus.I2Success(data=results)
+        return InterfaceStatus.I2Success(data=report)
 
     def tag_if_malicious_or_suspicious(self, context, ioc):
         """
@@ -104,7 +103,8 @@ class VtHandler():
         status = self._validate_report(report)
         if not status: return status
 
-        results = status.get_data()
+        report = status.get_data()
+        results = report.get('results')
 
         self.tag_if_malicious_or_suspicious(context=results, ioc=ioc)
 
@@ -136,7 +136,7 @@ class VtHandler():
             self.log.info('Adding new attribute VT Domain Report to IOC')
 
             status = gen_domain_report_from_template(html_template=self.mod_config.get('vt_domain_report_template'),
-                                                     vt_report=results)
+                                                     vt_report=report)
 
             if not status.is_success():
                 return status
@@ -171,9 +171,11 @@ class VtHandler():
         status = self._validate_report(report)
         if not status: return status
 
-        results = status.get_data()
+        report = status.get_data()
 
-        self.tag_if_malicious_or_suspicious(context=results, ioc=ioc)
+        results = report.get('results')
+
+        self.tag_if_malicious_or_suspicious(context=report, ioc=ioc)
 
         if self.mod_config.get('vt_ip_assign_asn_as_tag') is True:
             self.log.info('Assigning new ASN tag to IOC.')
@@ -191,7 +193,7 @@ class VtHandler():
             self.log.info('Adding new attribute VT IP Report to IOC')
 
             status = gen_ip_report_from_template(html_template=self.mod_config.get('vt_ip_report_template'),
-                                                 vt_report=results)
+                                                 vt_report=report)
 
             if not status.is_success():
                 return status
@@ -203,7 +205,7 @@ class VtHandler():
                                         field_value=rendered_report)
 
             except Exception:
-
+                print(traceback.format_exc())
                 self.log.error(traceback.format_exc())
                 return InterfaceStatus.I2Error(traceback.format_exc())
         else:
