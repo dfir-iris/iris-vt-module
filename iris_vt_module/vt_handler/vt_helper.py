@@ -40,15 +40,16 @@ def gen_domain_report_from_template(html_template, vt_report) -> IrisInterfaceSt
     """
     template = Template(html_template)
     context = vt_report
+    results = context.get('results')
 
-    context["avg_urls_detect_ratio"], _, context["nb_detected_urls"] = get_detected_urls_ratio(context)
+    context["avg_urls_detect_ratio"], _, context["nb_detected_urls"] = get_detected_urls_ratio(results)
 
-    if "detected_downloaded_samples" in context:
-        context["nb_detected_samples"] = len(context["detected_downloaded_samples"])
+    if "detected_downloaded_samples" in results:
+        context["nb_detected_samples"] = len(results["detected_downloaded_samples"])
         count_total = 0
         count_positives = 0
 
-        for samples in context["detected_downloaded_samples"]:
+        for samples in results["detected_downloaded_samples"]:
             count_total += samples.get('total')
             count_positives += samples.get('positives')
 
