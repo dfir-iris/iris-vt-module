@@ -26,7 +26,7 @@ import iris_interface.IrisInterfaceStatus as InterfaceStatus
 from app.datamgmt.manage.manage_attribute_db import add_tab_attribute_field
 
 from iris_vt_module.vt_handler.vt_helper import gen_domain_report_from_template, gen_ip_report_from_template, \
-    get_detected_urls_ratio
+    get_detected_urls_ratio, gen_hash_report_from_template
 
 
 class VtHandler():
@@ -70,9 +70,13 @@ class VtHandler():
         :return:
         """
         _, avg_detected_ratio, _ = get_detected_urls_ratio(context)
-        self.log.info(avg_detected_ratio)
-        self.log.info(self.mod_config.get('vt_tag_malicious_threshold'))
-        self.log.info(self.mod_config.get('vt_tag_suspicious_threshold'))
+
+        if not avg_detected_ratio:
+
+            pos = context.get('positives')
+            total = context.get('total')
+            if pos and total:
+                avg_detected_ratio = round(float(pos)/float(total), 2) * 100
 
         if avg_detected_ratio:
             if float(self.mod_config.get('vt_tag_malicious_threshold')) <= float(avg_detected_ratio):
@@ -175,12 +179,12 @@ class VtHandler():
 
         results = report.get('results')
 
-        self.tag_if_malicious_or_suspicious(context=report, ioc=ioc)
+        self.tag_if_malicious_or_suspicious(context=results, ioc=ioc)
 
         if self.mod_config.get('vt_ip_assign_asn_as_tag') is True:
             self.log.info('Assigning new ASN tag to IOC.')
 
-            asn = report.get('results').get('asn')
+            asn = results.get('asn')
             if asn is None:
                 self.log.info('ASN was nul - skipping')
 
@@ -212,3 +216,47 @@ class VtHandler():
             self.log.info('Skipped adding attribute report. Option disabled')
 
         return InterfaceStatus.I2Success("Successfully processed IP")
+
+    def handle_vt_hash(self, ioc):
+        """
+        Handles an IOC of type hash and adds VT insights
+
+        :param ioc: IOC instance
+        :return: IIStatus
+        """
+        vt = self.get_vt_instance()
+
+        self.log.info(f'Getting hash report for {ioc.ioc_value}')
+        report = vt.get_file_report(ioc.ioc_value)
+
+        status = self._validate_report(report)
+        if not status: return status
+
+        report = status.get_data()
+        results = report.get('results')
+
+        self.tag_if_malicious_or_suspicious(context=results, ioc=ioc)
+
+        if self.mod_config.get('vt_report_as_attribute') is True:
+            self.log.info('Adding new attribute VT hash Report to IOC')
+
+            status = gen_hash_report_from_template(html_template=self.mod_config.get('vt_hash_report_template'),
+                                                   vt_report=report)
+
+            if not status.is_success():
+                return status
+
+            rendered_report = status.get_data()
+
+            try:
+                add_tab_attribute_field(ioc, tab_name='VT Report', field_name="HTML report", field_type="html",
+                                        field_value=rendered_report)
+
+            except Exception:
+                print(traceback.format_exc())
+                self.log.error(traceback.format_exc())
+                return InterfaceStatus.I2Error(traceback.format_exc())
+        else:
+            self.log.info('Skipped adding attribute report. Option disabled')
+
+        return InterfaceStatus.I2Success("Successfully processed hash")

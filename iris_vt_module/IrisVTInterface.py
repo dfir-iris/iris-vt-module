@@ -129,6 +129,10 @@ class IrisVTInterface(IrisModuleInterface):
                 status = vt_handler.handle_vt_domain(ioc=element)
                 in_status = InterfaceStatus.merge_status(in_status, status)
 
+            elif element.ioc_type.type_name in ['md5', 'sha224', 'sha256', 'sha512']:
+                status = vt_handler.handle_vt_hash(ioc=element)
+                in_status = InterfaceStatus.merge_status(in_status, status)
+
             else:
                 self.log.error(f'IOC type {element.ioc_type.type_name} not handled by VT module. Skipping')
 

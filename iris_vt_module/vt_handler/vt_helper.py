@@ -109,3 +109,26 @@ def gen_ip_report_from_template(html_template, vt_report) -> IrisInterfaceStatus
         return IrisInterfaceStatus.I2Error(traceback.format_exc())
 
     return IrisInterfaceStatus.I2Success(data=rendered)
+
+
+def gen_hash_report_from_template(html_template, vt_report) -> IrisInterfaceStatus:
+    """
+    Generates an HTML report for hash, displayed as an attribute in the IOC
+
+    :param html_template: A string representing the HTML template
+    :param vt_report: The JSON report fetched with VT API
+    :return: IrisInterfaceStatus
+    """
+    template = Template(html_template)
+    context = vt_report
+
+    try:
+
+        rendered = template.render(context)
+
+    except Exception:
+        print(traceback.format_exc())
+        log.error(traceback.format_exc())
+        return IrisInterfaceStatus.I2Error(traceback.format_exc())
+
+    return IrisInterfaceStatus.I2Success(data=rendered)
