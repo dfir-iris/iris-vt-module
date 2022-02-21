@@ -4,7 +4,7 @@ An interface module for VT and Iris to automatically enrich IOCs with VT insight
 **Module type** : ``Processor``  
 **Min IRIS version required** : ``> 1.3.0`` 
 
-**The module is preinstalled and registered by default on IRIS. For a manual installation please see the Installation section of this readme**.
+The module is preinstalled and registered by default on IRIS. For a manual installation please see the Installation section of this readme.
 
 ## Configuration 
 The following configuration is available in the configuration section of the module on IRIS. 
@@ -18,9 +18,9 @@ The following configuration is available in the configuration section of the mod
 - **IOC tag malicious threshold** : Float detection ratio above which the module adds a ``vt:malicious``. To disable, add a value > 100. 
 - **IOC tag suspicious threshold**: Float detection ratio above which the module adds a ``vt:suspicious``. To disable, add a value > 100. 
 - **Add VT report as new IOC attribute**: Creates a new attribute on the IOC, base on the VT report. Templates define on this configuration are used. 
-- **Domain report template**: Jinja2 report template for the domain IOCs. Refers to the raw report to assess which fields are available. 
-- **IP report template**: Jinja2 report template for the IP IOCs. Refers to the raw report to assess which fields are available. 
-- **Hash report template**: Jinja2 report template for the hashes IOCs. Refers to the raw report to assess which fields are available. 
+- **Domain report template**: Jinja2 report template for domain IOCs. Refers to the raw report to assess which fields are available. 
+- **IP report template**: Jinja2 report template for IP IOCs. Refers to the raw report to assess which fields are available. 
+- **Hash report template**: Jinja2 report template for hash IOCs. Refers to the raw report to assess which fields are available. 
 
 ## Installation 
  The installation can however be done manually if required, 
