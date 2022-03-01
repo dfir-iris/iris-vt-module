@@ -79,15 +79,6 @@ class IrisVTInterface(IrisModuleInterface):
             else:
                 self.log.info("Successfully registered on_manual_trigger_ioc hook")
 
-            status = self.register_to_hook(module_id, iris_hook_name='on_manual_trigger_ioc',
-                                           manual_hook_name='Get VT insight 2')
-            if status.is_failure():
-                self.log.error(status.get_message())
-                self.log.error(status.get_data())
-
-            else:
-                self.log.info("Successfully registered on_manual_trigger_ioc hook")
-
         else:
             self.deregister_from_hook(module_id=self.module_id, iris_hook_name='on_manual_trigger_ioc')
 
