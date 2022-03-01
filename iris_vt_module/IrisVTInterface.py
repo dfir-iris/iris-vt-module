@@ -78,14 +78,25 @@ class IrisVTInterface(IrisModuleInterface):
 
             else:
                 self.log.info("Successfully registered on_manual_trigger_ioc hook")
+
+            status = self.register_to_hook(module_id, iris_hook_name='on_manual_trigger_ioc',
+                                           manual_hook_name='Get VT insight 2')
+            if status.is_failure():
+                self.log.error(status.get_message())
+                self.log.error(status.get_data())
+
+            else:
+                self.log.info("Successfully registered on_manual_trigger_ioc hook")
+
         else:
             self.deregister_from_hook(module_id=self.module_id, iris_hook_name='on_manual_trigger_ioc')
 
-    def hooks_handler(self, hook_name: str, data):
+    def hooks_handler(self, hook_name: str, hook_ui_name: str, data: any):
         """
         Hooks handler table. Calls corresponding methods depending on the hooks name.
 
         :param hook_name: Name of the hook which triggered
+        :param hook_ui_name: Name of the ui hook
         :param data: Data associated with the trigger.
         :return: Data
         """
