@@ -29,9 +29,10 @@ from iris_vt_module.vt_handler.vt_helper import gen_domain_report_from_template,
     get_detected_urls_ratio, gen_hash_report_from_template
 
 
-class VtHandler():
-    def __init__(self, mod_config, logger):
+class VtHandler(object):
+    def __init__(self, mod_config, server_config, logger):
         self.mod_config = mod_config
+        self.server_config = server_config
         self.vt = self.get_vt_instance()
         self.log = logger
 
@@ -43,11 +44,18 @@ class VtHandler():
         """
         is_premium = self.mod_config.get('vt_key_is_premium')
         api_key = self.mod_config.get('vt_api_key')
+        proxies = {}
+
+        if self.server_config.get('http_proxy'):
+            proxies['https'] = self.server_config.get('HTTPS_PROXY')
+
+        if self.server_config.get('https_proxy'):
+            proxies['http'] = self.server_config.get('HTTP_PROXY')
 
         if is_premium:
-            return PrivateApi(api_key)
+            return PrivateApi(api_key, proxies=proxies)
         else:
-            return PublicApi(api_key)
+            return PublicApi(api_key, proxies=proxies)
 
     def _validate_report(self, report):
         self.log.info(f'VT report fetched.')
@@ -238,8 +246,7 @@ class VtHandler():
         self.tag_if_malicious_or_suspicious(context=results, ioc=ioc)
 
         if self.mod_config.get('vt_report_as_attribute') is True:
-            self.log.info('Adding new attribute VT hash Report to IOC')
-
+            self.log.info('Generating report from template')
             status = gen_hash_report_from_template(html_template=self.mod_config.get('vt_hash_report_template'),
                                                    vt_report=report)
 
@@ -249,8 +256,10 @@ class VtHandler():
             rendered_report = status.get_data()
 
             try:
+                self.log.info('Adding new attribute VT hash Report to IOC')
                 add_tab_attribute_field(ioc, tab_name='VT Report', field_name="HTML report", field_type="html",
                                         field_value=rendered_report)
+                self.log.info('Done')
 
             except Exception:
                 print(traceback.format_exc())

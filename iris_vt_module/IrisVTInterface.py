@@ -46,8 +46,8 @@ class IrisVTInterface(IrisModuleInterface):
         :return: Nothing
         """
         self.module_id = module_id
-
-        if self._dict_conf.get('vt_on_create_hook_enabled'):
+        module_conf = self.module_dict_conf
+        if module_conf.get('vt_on_create_hook_enabled'):
             status = self.register_to_hook(module_id, iris_hook_name='on_postload_ioc_create')
             if status.is_failure():
                 self.log.error(status.get_message())
@@ -58,7 +58,7 @@ class IrisVTInterface(IrisModuleInterface):
         else:
             self.deregister_from_hook(module_id=self.module_id, iris_hook_name='on_postload_ioc_create')
 
-        if self._dict_conf.get('vt_on_update_hook_enabled'):
+        if module_conf.get('vt_on_update_hook_enabled'):
             status = self.register_to_hook(module_id, iris_hook_name='on_postload_ioc_update')
             if status.is_failure():
                 self.log.error(status.get_message())
@@ -69,7 +69,7 @@ class IrisVTInterface(IrisModuleInterface):
         else:
             self.deregister_from_hook(module_id=self.module_id, iris_hook_name='on_postload_ioc_update')
 
-        if self._dict_conf.get('vt_manual_hook_enabled'):
+        if module_conf.get('vt_manual_hook_enabled'):
             status = self.register_to_hook(module_id, iris_hook_name='on_manual_trigger_ioc',
                                            manual_hook_name='Get VT insight')
             if status.is_failure():
@@ -118,7 +118,10 @@ class IrisVTInterface(IrisModuleInterface):
         :return: IIStatus
         """
 
-        vt_handler = VtHandler(mod_config=self._dict_conf, logger=self.log)
+        vt_handler = VtHandler(mod_config=self.module_dict_conf,
+                               server_config=self.server_dict_conf,
+                               logger=self.log)
+
         in_status = InterfaceStatus.IIStatus(code=InterfaceStatus.I2CodeNoError)
 
         for element in data:
