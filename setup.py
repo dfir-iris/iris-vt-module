@@ -35,5 +35,11 @@ setuptools.setup(
          "Programming Language :: Python :: 3",
          "License :: OSI Approved :: LGPLv3",
          "Operating System :: OS Independent",
-     ]
+     ],
+     install_requires=[
+        "iris_interface=1.1",
+        "virustotal-api==1.1.11"
+        "setuptools",
+        "pyunpack"
+    ]
  )
