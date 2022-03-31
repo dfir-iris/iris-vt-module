@@ -2,7 +2,7 @@
 
 An interface module for VT and Iris to automatically enrich IOCs with VT insight.  
 **Module type** : ``Processor``  
-**Min IRIS version required** : ``> 1.3.0`` 
+**Min IRIS version required** : ``> 1.4.0`` 
 
 The module is preinstalled and registered by default on IRIS. For a manual installation please see the Installation section of this readme.
 
