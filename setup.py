@@ -38,7 +38,7 @@ setuptools.setup(
      ],
      install_requires=[
         "iris_interface==1.1",
-        "virustotal-api==1.1.11"
+        "virustotal-api==1.1.11",
         "setuptools",
         "pyunpack"
     ]
