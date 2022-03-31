@@ -37,7 +37,7 @@ setuptools.setup(
          "Operating System :: OS Independent",
      ],
      install_requires=[
-        "iris_interface=1.1",
+        "iris_interface==1.1",
         "virustotal-api==1.1.11"
         "setuptools",
         "pyunpack"
