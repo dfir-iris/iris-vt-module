@@ -87,6 +87,9 @@ class VtHandler(object):
                 avg_detected_ratio = round(float(pos)/float(total), 2) * 100
 
         if avg_detected_ratio:
+            if ioc.ioc_tags is None:
+                ioc.ioc_tags = ""
+
             if float(self.mod_config.get('vt_tag_malicious_threshold')) <= float(avg_detected_ratio):
                 if f'vt:malicious' not in ioc.ioc_tags.split(','):
                     ioc.ioc_tags = f"{ioc.ioc_tags},vt:malicious"
@@ -195,6 +198,9 @@ class VtHandler(object):
             asn = results.get('asn')
             if asn is None:
                 self.log.info('ASN was nul - skipping')
+
+            if ioc.ioc_tags is None:
+                ioc.ioc_tags = ""
 
             if f'ASN:{asn}' not in ioc.ioc_tags.split(','):
                 ioc.ioc_tags = f"{ioc.ioc_tags},ASN:{asn}"

@@ -23,21 +23,20 @@ import setuptools
 
 setuptools.setup(
      name='iris_vt_module',
-     version='0.1',
+     version='0.2',
      packages=['iris_vt_module', 'iris_vt_module.vt_handler'],
      author="DFIR-IRIS",
      author_email="contact@dfir-iris.org",
-     description="An interface module for VT and Iris",
-     long_description="An interface module for VT and Iris",
+     description="An interface module for VT and DFIR-IRIS",
+     long_description="An interface module for VT and DFIR-IRIS",
      long_description_content_type="text/markdown",
-     url="https://github.com/",
+     url="https://github.com/dfir-iris/iris-client",
      classifiers=[
          "Programming Language :: Python :: 3",
          "License :: OSI Approved :: LGPLv3",
          "Operating System :: OS Independent",
      ],
      install_requires=[
-        "iris_interface==1.1",
         "virustotal-api==1.1.11",
         "setuptools",
         "pyunpack"
