@@ -7,7 +7,7 @@ An interface module for VT and Iris to automatically enrich IOCs with VT insight
 The module is preinstalled and registered by default on IRIS. For a manual installation please see the Installation section of this readme.
 
 ## Configuration 
-Please refer to the [IRIS documentation](https://dfir-iris.github.io/operations/modules/natives/IrisVT/). 
+Please refer to the [IRIS documentation](https://docs.dfir-iris.org/operations/modules/natives/IrisVT/). 
 
 ## Installation 
  The installation can however be done manually if required, 
