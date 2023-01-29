@@ -23,7 +23,7 @@ import setuptools
 
 setuptools.setup(
      name='iris_vt_module',
-     version='0.2',
+     version='0.3',
      packages=['iris_vt_module', 'iris_vt_module.vt_handler'],
      author="DFIR-IRIS",
      author_email="contact@dfir-iris.org",
