@@ -20,8 +20,8 @@
 
 module_name = "IrisVT"
 module_description = "Provides an interface between VirusTotal and IRIS"
-interface_version = "1.2.0"
-module_version = "1.2.0"
+interface_version = "1.2.1"
+module_version = "1.2.1"
 pipeline_support = False
 pipeline_info = {}
 
